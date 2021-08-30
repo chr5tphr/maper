@@ -48,10 +48,11 @@ def create(bibtex_uri, pdf_uri, output):
 
     LOGGER.info(f"Identified \"{'; '.join(authors)}: '{bib['title']}', {bib['issued']['date-parts'][0][0]}.\"")
 
+    firstword = next(iter(re.findall('[a-zA-Z]{4,}', bib['title'])), 'untitled').lower()
     identifier = '{:s}{:d}{:s}'.format(
-        bib['author'][0]['family'],
+        bib['author'][0]['family'].lower(),
         bib['issued']['date-parts'][0][0],
-        re.match('[a-zA-Z]+', bib['title'])[0]
+        firstword
     )
     bib['id'] = identifier
     bibtex = json2bib([bib])
@@ -65,6 +66,7 @@ def create(bibtex_uri, pdf_uri, output):
         with pdf.open_metadata() as meta:
             meta['dc:title'] = bib['title']
             meta['dc:creator'] = authors
+            meta['dc:date'] = f"{bib['issued']['date-parts'][0][0]:04d}"
 
         filespec = pikepdf.AttachedFileSpec(pdf, bibtex.encode('utf-8'))
         pdf.attachments['bibtex.bib'] = filespec
